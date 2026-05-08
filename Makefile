@@ -40,7 +40,7 @@ migrate-create:  ## Create new migration
 
 security:  ## Run security checks
 	bandit -r app/ -c pyproject.toml
-	safety check --file requirements.txt
+	safety scan --file requirements.txt
 
 pre-commit:  ## Run pre-commit hooks
 	pre-commit run --all-files
