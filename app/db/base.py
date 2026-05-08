@@ -16,7 +16,7 @@ if is_test:
         SQLALCHEMY_DATABASE_URL,
         connect_args={"check_same_thread": False},
     )
-else:
+else:  # pragma: no cover
     if settings.DB_ENGINE == "postgresql":
         url = URL.create(
             drivername="postgresql",
@@ -46,5 +46,5 @@ def get_db():
         db.close()
 
 # Only initialize DB if not in test mode
-if not is_test:
+if not is_test:  # pragma: no cover
     init_db()
