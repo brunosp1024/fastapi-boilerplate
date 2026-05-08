@@ -8,6 +8,7 @@ load_dotenv(env_file)
 
 
 class Settings(BaseSettings):
+    DB_SSLMODE: str = "disable"
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Application
