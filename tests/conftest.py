@@ -8,8 +8,8 @@ from sqlalchemy.orm import sessionmaker
 # Set test environment BEFORE any imports
 os.environ["APP_ENV"] = "test"
 
-from app.db.models.base import Base  # noqa: I001
 import app.db.models  # noqa: F401, I001
+from app.db.models.base import Base  # noqa: I001
 
 # Use a named in-memory database that can be shared
 SQLALCHEMY_DATABASE_URL = "sqlite:///file:testdb?mode=memory&cache=shared&uri=true"
@@ -42,8 +42,8 @@ def clean_tables(db_session):
 def client(db_session):
     """Create a test client with database dependency override."""
     # Import app after setting test environment
-    from app.main import app  # noqa: I001
     from app.db.base import get_db  # noqa: I001
+    from app.main import app  # noqa: I001
 
     def override_get_db():
         try:
