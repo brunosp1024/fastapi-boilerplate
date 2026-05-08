@@ -15,8 +15,7 @@ import app.db.models  # noqa: F401, I001
 SQLALCHEMY_DATABASE_URL = "sqlite:///file:testdb?mode=memory&cache=shared&uri=true"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False, "uri": True}
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False, "uri": True}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -30,12 +29,14 @@ def db_session():
     db.close()
     Base.metadata.drop_all(bind=engine)
 
+
 @pytest.fixture(autouse=True)
 def clean_tables(db_session):
     # Limpa todas as tabelas antes de cada teste
     for table in reversed(Base.metadata.sorted_tables):
         db_session.execute(table.delete())
     db_session.commit()
+
 
 @pytest.fixture(scope="module")
 def client(db_session):
@@ -55,9 +56,17 @@ def client(db_session):
     yield client
     app.dependency_overrides.clear()
 
+
 @pytest.fixture(autouse=True)
 def fast_hash(monkeypatch):
     # Substitui o hash_password e verify_password por funções rápidas
     import app.core.security
-    monkeypatch.setattr(app.core.security, "hash_password", lambda pwd: f"fakehash${pwd}")
-    monkeypatch.setattr(app.core.security, "verify_password", lambda pwd, hashed: hashed == f"fakehash${pwd}")
+
+    monkeypatch.setattr(
+        app.core.security, "hash_password", lambda pwd: f"fakehash${pwd}"
+    )
+    monkeypatch.setattr(
+        app.core.security,
+        "verify_password",
+        lambda pwd, hashed: hashed == f"fakehash${pwd}",
+    )

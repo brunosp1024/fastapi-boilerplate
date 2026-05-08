@@ -15,9 +15,7 @@ class UserRepository:
     def create(self, user_data: UserCreateDTO) -> User:
         hashed_pw = hash_password(user_data.password)
         user = User(
-            name=user_data.name,
-            email=user_data.email,
-            hashed_password=hashed_pw
+            name=user_data.name, email=user_data.email, hashed_password=hashed_pw
         )
 
         if settings.APP_DEBUG and ("admin" in user_data.email):

@@ -11,6 +11,7 @@ class DummyDB:
             raise OperationalError("fail", None, None)
         return True
 
+
 def test_health_check_healthy():
     db = DummyDB()
     result = asyncio.run(health_check(db))
@@ -19,10 +20,12 @@ def test_health_check_healthy():
     assert "timestamp" in result
     assert result["version"] == "1.0.0"
 
+
 def test_health_check_unhealthy():
     class FailingDB:
         def execute(self, stmt):
             raise Exception("db error")
+
     db = FailingDB()
     result = asyncio.run(health_check(db))
     assert result["status"] == "degraded"

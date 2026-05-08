@@ -6,6 +6,8 @@ def test_health_check(client):
     assert data["status"] in ["healthy", "degraded"]
     assert "timestamp" in data
     assert "database" in data
+
+
 def test_root(client):
     """Test root endpoint."""
     response = client.get("/")

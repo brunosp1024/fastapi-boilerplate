@@ -11,6 +11,7 @@ is_test = os.environ.get("APP_ENV") == "test"
 
 if is_test:
     from app.core.config_test import test_settings
+
     SQLALCHEMY_DATABASE_URL = test_settings.DATABASE_URL
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
@@ -32,11 +33,13 @@ else:  # pragma: no cover
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 def init_db():
     if settings.APP_DEBUG:
         Base.metadata.drop_all(bind=engine)
         print("DEBUG: flushing db")
     Base.metadata.create_all(bind=engine)
+
 
 def get_db():
     db = SessionLocal()
@@ -44,6 +47,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 # Only initialize DB if not in test mode
 if not is_test:  # pragma: no cover

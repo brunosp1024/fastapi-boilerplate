@@ -23,4 +23,5 @@ class TestSettings(PydanticBaseSettings):
     # Testing-specific settings
     TESTING: bool = True
 
+
 test_settings = TestSettings()

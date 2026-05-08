@@ -20,6 +20,7 @@ credentials_exception = HTTPException(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> UserResponse:
@@ -38,13 +39,16 @@ def get_current_user(
         raise credentials_exception
     return UserResponse.model_validate(user)
 
+
 def hash_password(password: str) -> str:
     """Hash a password for storing."""
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """Create a JSON Web Token (JWT) access token."""
@@ -56,6 +60,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return jwt.encode(
         to_encode, settings.APP_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )
+
 
 def verify_token(token: str):
     """Verify a JWT token and return the username if valid."""

@@ -12,9 +12,11 @@ def test_create_and_get_by_token(db_session):
     assert found is not None
     assert found.token == token
 
+
 def test_get_by_token_not_found(db_session):
     repo = RefreshTokenRepository(db_session)
     assert repo.get_by_token("notfound") is None
+
 
 def test_revoke_token_success(db_session):
     repo = RefreshTokenRepository(db_session)
@@ -24,6 +26,7 @@ def test_revoke_token_success(db_session):
     assert repo.revoke(token) is True
     revoked = repo.get_by_token(token)
     assert revoked.revoked is True
+
 
 def test_revoke_token_not_found(db_session):
     repo = RefreshTokenRepository(db_session)

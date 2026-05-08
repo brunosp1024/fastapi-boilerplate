@@ -8,6 +8,7 @@ from app.db.base import get_db
 
 router = APIRouter(tags=["Health Check"])
 
+
 @router.get("/health")
 async def health_check(db: Session = Depends(get_db)):
     """
@@ -28,6 +29,7 @@ async def health_check(db: Session = Depends(get_db)):
         "database": db_status,
         "version": "1.0.0",
     }
+
 
 @router.get("/")
 async def root():

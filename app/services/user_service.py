@@ -7,6 +7,7 @@ from app.schemas.user_dto import UserCreateDTO, UserUpdateDTO
 
 USER_NOT_FOUND = "User not found"
 
+
 class UserService:
     def __init__(self, db_session: Session):
         self.repository = UserRepository(db_session)

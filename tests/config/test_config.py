@@ -20,8 +20,10 @@ def test_config_database_url():
     assert settings.DB_NAME in url
     assert settings.DB_HOST in url
 
+
 def test_config_database_url_testing(monkeypatch):
     monkeypatch.setenv("TESTING", "True")
     from app.core.config import settings as test_settings
+
     url = test_settings.DATABASE_URL
     assert url.startswith("sqlite://") or "DATABASE_URL" in url
