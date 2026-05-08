@@ -37,6 +37,14 @@ sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "alembic",
+]
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -50,12 +58,6 @@ ignore = [
     "E501",  # line too long (handled by black)
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
-]
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "alembic",
 ]
 
 [tool.mypy]
@@ -76,7 +78,6 @@ strict_equality = true
 module = [
     "jose.*",
     "passlib.*",
-    "alembic.*",
 ]
 ignore_missing_imports = true
 

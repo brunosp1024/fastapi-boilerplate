@@ -1,9 +1,9 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
-import app.api.routes.health_routes as health_endpoints
 import app.api.routes.auth_routes as auth_endpoints
+import app.api.routes.health_routes as health_endpoints
 from app.core.config import settings
 
 app = FastAPI(

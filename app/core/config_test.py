@@ -1,5 +1,5 @@
-from app.core.config import Settings as BaseSettings
 from pydantic_settings import BaseSettings as PydanticBaseSettings
+
 
 class TestSettings(PydanticBaseSettings):
     """Test-specific settings that override the base settings"""

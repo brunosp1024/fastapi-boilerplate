@@ -1,10 +1,12 @@
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.core.security import hash_password
 from app.db.models.user import User
 from app.schemas.user_dto import UserCreateDTO, UserUpdateDTO
-from app.core.config import settings
+
 
 class UserRepository:
     def __init__(self, db: Session):
@@ -13,8 +15,8 @@ class UserRepository:
     def create(self, user_data: UserCreateDTO) -> User:
         hashed_pw = hash_password(user_data.password)
         user = User(
-            name=user_data.name, 
-            email=user_data.email, 
+            name=user_data.name,
+            email=user_data.email,
             hashed_password=hashed_pw
         )
 
@@ -26,16 +28,16 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def get_by_id(self, user_id: int) -> Optional[User]:
+    def get_by_id(self, user_id: int) -> User | None:
         return self.db.query(User).filter(User.id == user_id).first()
 
-    def get_by_email(self, email: str) -> Optional[User]:
+    def get_by_email(self, email: str) -> User | None:
         return self.db.query(User).filter(User.email == email).first()
 
-    def list(self) -> List[User]:
+    def list(self) -> list[User]:
         return self.db.query(User).all()
 
-    def update(self, user_id: int, user_data: UserUpdateDTO) -> Optional[User]:
+    def update(self, user_id: int, user_data: UserUpdateDTO) -> User | None:
         user = self.get_by_id(user_id)
         if not user:
             return None
@@ -45,7 +47,7 @@ class UserRepository:
         for key, value in update_data.items():
             setattr(user, key, value)
 
-        user.updated_at = datetime.now(timezone.utc)
+        user.updated_at = datetime.now(UTC)
         self.db.commit()
         self.db.refresh(user)
         return user

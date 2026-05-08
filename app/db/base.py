@@ -1,9 +1,11 @@
+import os
+
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
-from app.db.models.base import Base
-import app.db.models
+
+import app.db.models  # noqa: F401
 from app.core.config import settings
-import os
+from app.db.models.base import Base
 
 is_test = os.environ.get("APP_ENV") == "test"
 

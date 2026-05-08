@@ -1,6 +1,7 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 env_file = ".env.test" if os.getenv("APP_ENV") == "test" else ".env"
 load_dotenv(env_file)

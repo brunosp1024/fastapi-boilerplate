@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-import secrets
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from datetime import UTC, datetime, timedelta
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from app.core.config import settings
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.db.base import get_db
 from app.db.models.user import User
 from app.schemas.user_dto import UserResponse
@@ -27,11 +27,11 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.APP_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
-        email: str = payload.get("sub")
+        email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+    except JWTError as err:
+        raise credentials_exception from err
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -49,7 +49,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """Create a JSON Web Token (JWT) access token."""
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (
+    expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     to_encode.update({"exp": expire})
@@ -63,9 +63,9 @@ def verify_token(token: str):
         payload = jwt.decode(
             token, settings.APP_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
-        username: str = payload.get("sub")
+        username: str | None = payload.get("sub")
         if username is None:
             raise credentials_exception
         return username
-    except JWTError:
-        raise credentials_exception
+    except JWTError as err:
+        raise credentials_exception from err
