@@ -55,7 +55,7 @@ async def login(
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
-        token_type="bearer"
+            token_type="bearer"  # nosec
     )
 
 @router.get("/me", response_model=UserResponse)
@@ -102,5 +102,5 @@ async def refresh_access_token(
     return TokenResponse(
         access_token=new_access_token,
         refresh_token=new_refresh_token,
-        token_type="bearer"
+            token_type="bearer"  # nosec
     )

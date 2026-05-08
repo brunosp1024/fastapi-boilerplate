@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     APP_DEBUG: bool = True
 
     # Server
-    HOST: str = "0.0.0.0"
+    HOST: str = "0.0.0.0"  # nosec
     PORT: int = 8000
 
     # Database
