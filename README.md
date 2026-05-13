@@ -61,10 +61,26 @@ fastapi-boilerplate/
    cd fastapi-boilerplate
    ```
 
-2. **Create virtual environment**
+
+2. **(Recomendado) Configure o Poetry para criar a virtualenv dentro do projeto**
    ```bash
-   python -m venv . venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   poetry config virtualenvs.in-project true
+   ```
+
+3. **Crie e ative o ambiente virtual com Poetry**
+   ```bash
+   poetry install
+   poetry shell # Ativa o ambiente virtual
+   ```
+   > ⚠️ Caso o comando `poetry install` retorne erro "No such file or directory: 'python'", crie um link simbólico para que `python` aponte para `python3`:
+   ```bash
+   sudo ln -s $(which python3) /usr/local/bin/python
+   ```
+
+   Ou, se preferir usar venv:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies**

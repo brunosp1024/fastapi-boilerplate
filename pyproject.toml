@@ -11,6 +11,54 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 
+# Dependências de produção
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "SQLAlchemy",
+    "psycopg2-binary",
+    "alembic",
+    "pydantic",
+    "pydantic[email]",
+    "pytest",
+    "httpx",
+    "python-jose[cryptography]",
+    "bcrypt==4.3.0",
+    "passlib[bcrypt]",
+    "python-multipart",
+    "pydantic-settings",
+    "python-dotenv",
+    "pytest-asyncio",
+    "redis"
+]
+
+# Dependências dev
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.26.0",
+
+    # Code Quality
+    "ruff>=0.1.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0",
+
+    # Security
+    "bandit>=1.7.5",
+    "safety>=3.0.0",
+
+    # Pre-commit
+    "pre-commit>=3.6.0",
+
+    # Type stubs
+    "types-passlib>=1.7.7",
+    "types-python-jose>=3.3.4"
+]
+
 [tool.black]
 line-length = 88
 target-version = ['py311']
