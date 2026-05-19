@@ -4,10 +4,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.db.base import get_db
+from app.db.base import async_get_db
 from app.db.models.user import User
 from app.schemas.user_dto import UserResponse
 
@@ -21,8 +22,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(async_get_db)
 ) -> UserResponse:
     try:
         payload = jwt.decode(
@@ -34,7 +35,8 @@ def get_current_user(
     except JWTError as err:
         raise credentials_exception from err
 
-    user = db.query(User).filter(User.email == email).first()
+    result = await db.execute(select(User).filter(User.email == email))
+    user = result.scalars().first()
     if not user:
         raise credentials_exception
     return UserResponse.model_validate(user)

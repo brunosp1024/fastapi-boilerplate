@@ -1,16 +1,5 @@
 # 🚀 FastAPI Boilerplate - Clean Architecture
 
-[![Use this template](https://img.shields.io/badge/Use%20this-Template-2ea44f?style=for-the-badge&logo=github)](https://github.com/Alwil17/fastapi-boilerplate/generate)
-
-![CI](https://github.com/Alwil17/fastapi-boilerplate/workflows/CI/badge.svg)
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
-![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
-![Codecov](https://codecov.io/gh/Alwil17/fastapi-boilerplate/branch/master/graph/badge.svg)
-![Template checkbox](https://docs.github.com/assets/cb-24935/images/help/repository/template-repository-checkbox.png)
-
 > A production-ready FastAPI boilerplate with clean architecture, JWT authentication, and PostgreSQL/SQLite support.
 
 ## ✨ Features
@@ -29,6 +18,10 @@
 
 ```
 fastapi-boilerplate/
+├──.github
+|   └── workflows            # workflow on github
+|       ├── ci.yml
+|       └── security.yml
 ├── app/
 │   ├── api/
 │   │   └── routes/          # API endpoints
@@ -40,9 +33,11 @@ fastapi-boilerplate/
 │   └── schemas/             # Pydantic models (DTOs)
 ├── alembic/                 # Database migrations
 ├── tests/                   # Test suite
-├── . env. example             # Environment variables template
+├── .env.example             # Environment variables template
 ├── Dockerfile               # Docker configuration
-└── requirements.txt         # Python dependencies
+├── docker-compose.yml       # Manager containers
+├── pyproject.toml           # Python dependencies
+└── .gitignore               # ignored files on git
 ```
 
 ## 🚀 Quick Start
@@ -51,7 +46,7 @@ fastapi-boilerplate/
 
 - Python 3.11+
 - PostgreSQL (or use SQLite for local dev)
-- pip or poetry
+- poetry
 
 ### Installation
 
@@ -63,30 +58,35 @@ fastapi-boilerplate/
 
 
 2. **(Recomendado) Configure o Poetry para criar a virtualenv dentro do projeto**
+
+   Este projeto utiliza o Poetry para criar ambiente virtual e gerenciar as dependências. Execute o comando para que o ambiente virtual seja criado dentro do projeto, por padrão.
+
    ```bash
    poetry config virtualenvs.in-project true
    ```
 
-3. **Crie e ative o ambiente virtual com Poetry**
+4. **Instalação de Dependências 📦**
+
+   ### Instalar apenas dependências de produção
+
+   Ao executar "poetry install", automaticamente um ambiente virtual é criado.
+
    ```bash
-   poetry install
-   poetry shell # Ativa o ambiente virtual
+   poetry install --no-root --only main
    ```
+   Isso instala apenas as dependências essenciais para rodar a aplicação em produção.
+
+   ### Instalar dependências de desenvolvimento (recomendado para desenvolvimento e CI)
+
+   ```bash
+   poetry install --with dev --no-root
+   ```
+   Isso instala todas as dependências, incluindo ferramentas de teste, análise de código, segurança e pre-commit.
+
    > ⚠️ Caso o comando `poetry install` retorne erro "No such file or directory: 'python'", crie um link simbólico para que `python` aponte para `python3`:
    ```bash
    sudo ln -s $(which python3) /usr/local/bin/python
-   ```
-
-   Ou, se preferir usar venv:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+     ```
 
 4. **Set up environment variables**
    ```bash
@@ -103,7 +103,6 @@ fastapi-boilerplate/
    ```bash
    uvicorn app.main:app --reload
    ```
-
 7. **Access the API**
    - API:  http://localhost:8000
    - Swagger UI: http://localhost:8000/docs
@@ -131,6 +130,15 @@ pytest --cov=app tests/
 # Run specific test file
 pytest tests/test_auth.py -v
 ```
+
+## 🔄 Pre-commit vs CI (GitHub Actions)
+
+Este projeto utiliza tanto hooks locais de pre-commit quanto workflows de CI no GitHub:
+
+- **pre-commit**: Executa verificações de qualidade (black, isort, ruff, mypy, bandit, etc.) automaticamente antes de cada commit local, conforme definido em `.pre-commit-config.yaml`. Isso previne que código fora do padrão seja enviado ao repositório.
+- **GitHub Actions (CI/CD)**: Os arquivos `.github/workflows/ci.yml` e `.github/workflows/security.yml` executam as mesmas ferramentas em cada push/pull request no repositório remoto, garantindo que todo código enviado para branches principais também passe pelas checagens.
+
+Assim, a qualidade do código é garantida tanto localmente (antes do commit) quanto remotamente (antes de merge/deploy).
 
 ## 📖 API Endpoints
 
@@ -187,14 +195,6 @@ This boilerplate follows:
 - **Pytest** - Testing framework
 - **PostgreSQL** - Production database
 - **SQLite** - Testing database
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-## 📝 License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 
 ## 🙏 Acknowledgments
 

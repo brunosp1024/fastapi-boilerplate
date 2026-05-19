@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-env_file = ".env.test" if os.getenv("APP_ENV") == "test" else ".env"
+env_file = ".env"
 load_dotenv(env_file)
 
 
@@ -43,8 +43,8 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        if os.getenv("TESTING") == "True" or os.getenv("APP_ENV") == "testing":
-            return os.getenv("DATABASE_URL", "sqlite:///:memory:")
+        if os.getenv("APP_ENV") == "test":
+            return "sqlite+aiosqlite:///:memory:"
         return f"{self.DB_ENGINE}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 

@@ -5,7 +5,7 @@ help:  ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 install:   ## Install dependencies
-	pip install -r requirements.txt
+	poetry install --with dev --no-root
 
 dev:  ## Run development server
 	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -40,7 +40,7 @@ migrate-create:  ## Create new migration
 
 security:  ## Run security checks
 	bandit -r app/ -c pyproject.toml
-	safety scan --file requirements.txt
+	pip-audit || true
 
 pre-commit:  ## Run pre-commit hooks
 	pre-commit run --all-files

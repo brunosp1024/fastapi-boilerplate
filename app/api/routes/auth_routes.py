@@ -1,38 +1,31 @@
-import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.security import create_access_token, get_current_user
-from app.db.base import get_db
+from app.db.base import async_get_db
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.schemas.auth_dto import RefreshTokenRequest, TokenResponse
 from app.schemas.user_dto import UserCreateDTO, UserResponse
+from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-def create_refresh_token(user_id: int, db: Session):
-    """Create a new refresh token for a user."""
-    token = secrets.token_hex(32)
-    expires_at = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token_repo = RefreshTokenRepository(db)
-    refresh_token_repo.create(user_id, token, expires_at)
-    return token
-
-
 @router.post(
     "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
 )
-async def register(user_data: UserCreateDTO, db: Session = Depends(get_db)):
+async def register(
+    user_data: UserCreateDTO, db: Annotated[AsyncSession, Depends(async_get_db)]
+):
     """Register a new user."""
     user_service = UserService(db)
     try:
-        user = user_service.create_user(user_data)
+        user = await user_service.create_user(user_data)
         return UserResponse.model_validate(user)
     except ValueError as e:
         raise HTTPException(
@@ -42,11 +35,12 @@ async def register(user_data: UserCreateDTO, db: Session = Depends(get_db)):
 
 @router.post("/token", response_model=TokenResponse)
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     """Login and get access token."""
-    user_service = UserService(db)
-    user = user_service.authenticate_user(form_data.username, form_data.password)
+    auth_service = AuthService(db)
+    user = await auth_service.authenticate_user(form_data.username, form_data.password)
 
     if not user:
         raise HTTPException(
@@ -54,9 +48,8 @@ async def login(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
     access_token = create_access_token(data={"sub": user.email, "role": user.role})
-    refresh_token = create_refresh_token(user.id, db)
+    refresh_token = await AuthService.create_refresh_token(user.id, db)
 
     return TokenResponse(
         access_token=access_token,
@@ -73,11 +66,11 @@ async def get_current_user_info(current_user: UserResponse = Depends(get_current
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_access_token(
-    request: RefreshTokenRequest, db: Session = Depends(get_db)
+    request: RefreshTokenRequest, db: Annotated[AsyncSession, Depends(async_get_db)]
 ):
     """Refresh access token using refresh token."""
     refresh_token_repo = RefreshTokenRepository(db)
-    stored_token = refresh_token_repo.get_by_token(request.refresh_token)
+    stored_token = await refresh_token_repo.get_by_token(request.refresh_token)
 
     if not stored_token or stored_token.revoked:
         raise HTTPException(
@@ -90,7 +83,7 @@ async def refresh_access_token(
         )
 
     user_service = UserService(db)
-    user = user_service.get_user_by_id(int(stored_token.user_id))
+    user = await user_service.get_user_by_id(stored_token.user_id)
 
     if not user:
         raise HTTPException(
@@ -98,10 +91,10 @@ async def refresh_access_token(
         )
 
     new_access_token = create_access_token(data={"sub": user.email, "role": user.role})
-    new_refresh_token = create_refresh_token(user.id, db)
+    new_refresh_token = await AuthService.create_refresh_token(user.id, db)
 
     # Revoke old refresh token
-    refresh_token_repo.revoke(request.refresh_token)
+    await refresh_token_repo.revoke(request.refresh_token)
 
     return TokenResponse(
         access_token=new_access_token,

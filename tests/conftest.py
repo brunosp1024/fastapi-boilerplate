@@ -1,65 +1,81 @@
 import os
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
 # Set test environment BEFORE any imports
 os.environ["APP_ENV"] = "test"
 
-import app.db.models  # noqa: F401, I001
-from app.db.models.base import Base  # noqa: I001
+import app.db.models  # noqa: F401, E402, I001
+from app.core.config import settings  # noqa: E402
+from app.db.base import async_get_db  # noqa: E402
+from app.db.models.base import Base  # noqa: E402, I001
+from app.main import app as fastapi_app  # noqa: E402
 
-# Use a named in-memory database that can be shared
-SQLALCHEMY_DATABASE_URL = "sqlite:///file:testdb?mode=memory&cache=shared&uri=true"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False, "uri": True}
+engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+AsyncTestSessionLocal = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
-# Cria o banco uma vez por módulo e limpa as tabelas entre os testes
-@pytest.fixture(scope="module")
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    yield db
-    db.close()
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture(autouse=True)
-def clean_tables(db_session):
-    # Limpa todas as tabelas antes de cada teste
-    for table in reversed(Base.metadata.sorted_tables):
-        db_session.execute(table.delete())
-    db_session.commit()
-
-
-@pytest.fixture(scope="module")
-def client(db_session):
-    """Create a test client with database dependency override."""
-    # Import app after setting test environment
-    from app.db.base import get_db  # noqa: I001
-    from app.main import app  # noqa: I001
-
-    def override_get_db():
+# Override the async_get_db dependency to use the test database
+async def override_async_get_db():
+    async with AsyncTestSessionLocal() as session:
         try:
-            yield db_session
+            yield session
         finally:
-            pass
-
-    app.dependency_overrides[get_db] = override_get_db
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+            await session.close()
 
 
-@pytest.fixture(autouse=True)
+fastapi_app.dependency_overrides[async_get_db] = override_async_get_db
+
+
+# Cria o schema do banco uma vez por módulo e limpa as tabelas entre os testes
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+# Limpa as tabelas entre os testes para isolamento
+@pytest_asyncio.fixture(autouse=True)
+async def clean_tables():
+    yield
+    async with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(table.delete())
+
+
+# Create the database once per function and clean tables between tests
+@pytest_asyncio.fixture
+async def db_session():
+    async with AsyncTestSessionLocal() as db:
+        yield db
+
+
+# Fixture client async
+@pytest_asyncio.fixture
+async def client():
+    async with AsyncClient(
+        transport=ASGITransport(app=fastapi_app), base_url="http://test"
+    ) as c:
+        yield c
+
+
+# Fixture to replace the hash_password and verify_password functions with no-op for faster tests
+@pytest_asyncio.fixture
 def fast_hash(monkeypatch):
-    # Substitui o hash_password e verify_password por funções rápidas
     import app.core.security
 
     monkeypatch.setattr(

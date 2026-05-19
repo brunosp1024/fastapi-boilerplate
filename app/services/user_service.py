@@ -1,6 +1,7 @@
-from sqlalchemy.orm import Session
+from uuid import UUID as uuid
 
-from app.core.security import verify_password
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_dto import UserCreateDTO, UserUpdateDTO
@@ -9,34 +10,26 @@ USER_NOT_FOUND = "User not found"
 
 
 class UserService:
-    def __init__(self, db_session: Session):
-        self.repository = UserRepository(db_session)
+    def __init__(self, db: AsyncSession):
+        self.repository = UserRepository(db)
 
-    def create_user(self, user_data: UserCreateDTO) -> User:
-        existing_user = self.repository.get_by_email(user_data.email)
+    async def create_user(self, user_data: UserCreateDTO) -> User:
+        existing_user = await self.repository.get_by_email(user_data.email)
         if existing_user:
             raise ValueError("A user with this email already exists.")
-        return self.repository.create(user_data)
+        return await self.repository.create(user_data)
 
-    def get_user_by_email(self, email: str) -> User | None:
-        return self.repository.get_by_email(email)
+    async def get_user_by_email(self, email: str) -> User | None:
+        return await self.repository.get_by_email(email)
 
-    def authenticate_user(self, email: str, password: str) -> User | None:
-        user = self.get_user_by_email(email)
-        if not user:
-            return None
-        if not verify_password(password, user.hashed_password):
-            return None
-        return user
+    async def get_user_by_id(self, user_id: uuid) -> User | None:
+        return await self.repository.get_by_id(user_id)
 
-    def get_user_by_id(self, user_id: int) -> User | None:
-        return self.repository.get_by_id(user_id)
+    async def list_users(self) -> list[User]:
+        return await self.repository.list()
 
-    def list_users(self) -> list[User]:
-        return self.repository.list()
+    async def update_user(self, user_id: uuid, user_data: UserUpdateDTO) -> User | None:
+        return await self.repository.update(user_id, user_data)
 
-    def update_user(self, user_id: int, user_data: UserUpdateDTO) -> User | None:
-        return self.repository.update(user_id, user_data)
-
-    def delete_user(self, user_id: int) -> bool:
-        return self.repository.delete(user_id)
+    async def delete_user(self, user_id: uuid) -> bool:
+        return await self.repository.delete(user_id)

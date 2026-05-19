@@ -1,30 +1,37 @@
+import uuid as uuid_pkg
 from datetime import datetime
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.refresh_token import RefreshToken
 
 
 class RefreshTokenRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def create(self, user_id: int, token: str, expires_at: datetime) -> RefreshToken:
+    async def create(
+        self, user_id: uuid_pkg.UUID, token: str, expires_at: datetime
+    ) -> RefreshToken:
         refresh_token = RefreshToken(
             token=token, user_id=user_id, expires_at=expires_at
         )
         self.db.add(refresh_token)
-        self.db.commit()
-        self.db.refresh(refresh_token)
+        await self.db.commit()
+        await self.db.refresh(refresh_token)
         return refresh_token
 
-    def get_by_token(self, token: str) -> RefreshToken | None:
-        return self.db.query(RefreshToken).filter(RefreshToken.token == token).first()
+    async def get_by_token(self, token: str) -> RefreshToken | None:
+        result = await self.db.execute(
+            select(RefreshToken).where(RefreshToken.token == token)
+        )
+        return result.scalar_one_or_none()
 
-    def revoke(self, token: str) -> bool:
-        refresh_token = self.get_by_token(token)
+    async def revoke(self, token: str) -> bool:
+        refresh_token = await self.get_by_token(token)
         if not refresh_token:
             return False
         refresh_token.revoked = True
-        self.db.commit()
+        await self.db.commit()
         return True

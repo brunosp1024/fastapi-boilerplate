@@ -1,54 +1,18 @@
-import os
+from collections.abc import AsyncGenerator
 
-from sqlalchemy import URL, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import app.db.models  # noqa: F401
 from app.core.config import settings
-from app.db.models.base import Base
 
-is_test = os.environ.get("APP_ENV") == "test"
+DATABASE_URL = settings.DATABASE_URL
 
-if is_test:
-    from app.core.config_test import test_settings
-
-    SQLALCHEMY_DATABASE_URL = test_settings.DATABASE_URL
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-    )
-else:  # pragma: no cover
-    if settings.DB_ENGINE == "postgresql":
-        url = URL.create(
-            drivername="postgresql",
-            username=settings.DB_USER,
-            password=settings.DB_PASSWORD,
-            host=settings.DB_HOST,
-            database=settings.DB_NAME,
-        )
-        engine = create_engine(url, connect_args={"sslmode": settings.DB_SSLMODE})
-    else:
-        DATABASE_URL = f"{settings.DB_ENGINE}://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+local_session = async_sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
-def init_db():
-    if settings.APP_DEBUG:
-        Base.metadata.drop_all(bind=engine)
-        print("DEBUG: flushing db")
-    Base.metadata.create_all(bind=engine)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
+async def async_get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with local_session() as db:
         yield db
-    finally:
-        db.close()
-
-
-# Only initialize DB if not in test mode
-if not is_test:  # pragma: no cover
-    init_db()

@@ -1,8 +1,11 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException, status
 from jose import JWTError, jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import (
@@ -12,6 +15,7 @@ from app.core.security import (
     verify_password,
     verify_token,
 )
+from app.schemas.user_dto import UserResponse
 
 
 def test_hash_and_verify_password():
@@ -57,7 +61,42 @@ def test_verify_token_jwt_error(monkeypatch):
         verify_token("anytoken")
 
 
-def test_get_current_user_missing_sub(monkeypatch):
+@pytest.mark.asyncio
+async def test_get_current_user_success(monkeypatch):
+    email = "success@example.com"
+    token = create_access_token({"sub": email})
+
+    # Patch jwt.decode to return the correct payload
+    monkeypatch.setattr("app.core.security.jwt.decode", lambda *a, **kw: {"sub": email})
+
+    class DummyUser:
+        def __init__(self, email):
+            self.id = uuid4()
+            self.name = "Test User"
+            self.email = email
+            self.role = "user"
+            self.created_at = datetime.now()
+            self.updated_at = datetime.now()
+
+    mock_db = AsyncMock(spec=AsyncSession)
+    mock_scalars = AsyncMock()
+    mock_scalars.first = lambda: DummyUser(email)
+    mock_result = AsyncMock()
+    mock_result.scalars = lambda: mock_scalars
+
+    async def execute(*args, **kwargs):
+        return mock_result
+
+    mock_db.execute.side_effect = execute
+
+    user = await get_current_user(token=token, db=mock_db)
+    assert isinstance(user, UserResponse)
+    assert user.email == email
+    assert user.role == "user"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_missing_sub(monkeypatch):
     # Mocka jwt.decode para retornar payload sem 'sub'
     monkeypatch.setattr(
         "app.core.security.jwt.decode", lambda *a, **kw: {"role": "user"}
@@ -75,51 +114,42 @@ def test_get_current_user_missing_sub(monkeypatch):
             return DummyQ()
 
     with pytest.raises(HTTPException) as exc:
-        get_current_user(token="token", db=DummyDB())
+        await get_current_user(token="token", db=AsyncMock(spec=AsyncSession))
     assert exc.value.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_current_user_user_not_found(monkeypatch):
-    # Mocka jwt.decode para retornar payload com sub
+@pytest.mark.asyncio
+async def test_get_current_user_user_not_found(monkeypatch):
     monkeypatch.setattr(
         "app.core.security.jwt.decode", lambda *a, **kw: {"sub": "user@example.com"}
     )
 
-    class DummyDB:
-        def query(self, *a, **kw):
-            class DummyQ:
-                def filter(self, *a, **kw):
-                    return DummyQ()
+    mock_db = AsyncMock(spec=AsyncSession)
+    mock_scalars = AsyncMock()
+    mock_scalars.first = lambda: None
+    mock_result = AsyncMock()
+    mock_result.scalars = lambda: mock_scalars
 
-                def first(self):
-                    return None
+    async def execute(*args, **kwargs):
+        return mock_result
 
-            return DummyQ()
+    mock_db.execute.side_effect = execute
 
     with pytest.raises(HTTPException) as exc:
-        get_current_user(token="token", db=DummyDB())
+        await get_current_user(token="token", db=mock_db)
     assert exc.value.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_current_user_jwt_error(monkeypatch):
+@pytest.mark.asyncio
+async def test_get_current_user_jwt_error(monkeypatch):
     # Simula jwt.decode lançando JWTError
     monkeypatch.setattr(
         "app.core.security.jwt.decode",
         lambda *a, **kw: (_ for _ in ()).throw(JWTError()),
     )
 
-    class DummyDB:
-        def query(self, *a, **kw):
-            return self
-
-        def filter(self, *a, **kw):
-            return self
-
-        def first(self):
-            return None
-
     with pytest.raises(HTTPException):
-        get_current_user(token="token", db=DummyDB())
+        await get_current_user(token="token", db=AsyncMock(spec=AsyncSession))
 
 
 def test_create_access_token_with_expiry():

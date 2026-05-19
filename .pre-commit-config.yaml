@@ -2,8 +2,6 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
       - id: check-json
@@ -11,34 +9,48 @@ repos:
       - id: check-merge-conflict
       - id: detect-private-key
 
-  - repo: https://github.com/psf/black
-    rev: 24.1.1
+
+  - repo: local
     hooks:
       - id: black
-        language_version: python3.11
+        name: black
+        entry: black
+        language: system
+        types: [python]
+        pass_filenames: true
+        files: ^(app/|tests/|scripts/)
+        args: [--check]
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
       - id: isort
-        args: ["--profile", "black"]
+        name: isort
+        entry: isort
+        language: system
+        types: [python]
+        pass_filenames: true
+        files: ^(app/|tests/|scripts/)
+        args: [--check-only, --profile, black]
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.15
-    hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        name: ruff
+        entry: ruff
+        language: system
+        types: [python]
+        pass_filenames: true
+        files: ^(app/|tests/|scripts/)
+        args: [check]
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-passlib, types-python-jose]
-        args: [--ignore-missing-imports, --check-untyped-defs]
-
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.6
-    hooks:
       - id: bandit
+        name: bandit
+        entry: bandit
+        language: system
+        types: [python]
         args: ["-c", "pyproject.toml"]
-        additional_dependencies: ["bandit[toml]"]
+
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [python]
+        require_serial: true
+        pass_filenames: false
+        args: [app, tests]
