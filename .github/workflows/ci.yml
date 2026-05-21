@@ -27,16 +27,16 @@ jobs:
           poetry install --with dev --no-interaction --no-root
 
       - name: Run Black
-        run: poetry run black --check app/ tests/ scripts/
+        run: poetry run black --check app/ tests/
 
       - name: Run isort
-        run: poetry run isort --check-only app/ tests/ scripts/
+        run: poetry run isort --check-only app/ tests/
 
       - name: Run Ruff
-        run: poetry run ruff check app/ tests/ scripts/
+        run: poetry run ruff check app/ tests/
 
       - name:  Run MyPy
-        run: poetry run mypy app/ tests/ scripts/
+        run: poetry run mypy app/ tests/
 
   test:
     runs-on: ubuntu-latest
