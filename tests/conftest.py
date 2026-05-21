@@ -68,7 +68,7 @@ async def db_session():
 @pytest_asyncio.fixture
 async def client():
     async with AsyncClient(
-        transport=ASGITransport(app=fastapi_app), base_url="http://test"
+        transport=ASGITransport(app=fastapi_app), base_url="http://test"  # type: ignore[arg-type, unused-ignore]
     ) as c:
         yield c
 

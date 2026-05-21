@@ -68,7 +68,7 @@ async def test_register_user_success(monkeypatch):
     with patch(
         "app.services.user_service.UserService.create_user", new=fake_create_user
     ):
-        transport = ASGITransport(app=app)
+        transport = ASGITransport(app=app)  # type: ignore[arg-type, unused-ignore]
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
             payload = {
                 "name": "Usuário Teste",
@@ -167,7 +167,7 @@ async def test_login_authenticate_user_none(monkeypatch):
         "app.services.auth_service.AuthService.authenticate_user",
         fake_authenticate_user,
     )
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app)  # type: ignore[arg-type, unused-ignore]
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
             "/auth/token",
@@ -431,7 +431,7 @@ async def test_register_value_error(monkeypatch):
     with patch(
         "app.services.user_service.UserService.create_user", new=fake_create_user
     ):
-        transport = ASGITransport(app=app)
+        transport = ASGITransport(app=app)  # type: ignore[arg-type, unused-ignore]
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
             payload = {"name": "X", "email": "x@email.com", "password": "123"}
             response = await ac.post("/auth/register", json=payload)
