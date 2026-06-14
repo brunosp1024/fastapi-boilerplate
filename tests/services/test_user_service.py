@@ -124,3 +124,21 @@ async def test_list_users(db_session):
     )
     users = await service.list_users()
     assert any(u.email == "list@example.com" for u in users)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_name_found(db_session):
+    service = UserService(db_session)
+    await service.create_user(
+        make_user_data(email="byname@example.com", name="byname_user")
+    )
+    result = await service.get_user_by_name("byname_user")
+    assert result is not None
+    assert result.name == "byname_user"
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_name_not_found(db_session):
+    service = UserService(db_session)
+    result = await service.get_user_by_name("nonexistent_name_xyz")
+    assert result is None
