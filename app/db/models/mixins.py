@@ -19,6 +19,15 @@ class TimestampMixin:
     )
 
 
+class AuditMixin:
+    created_by: Mapped[uuid_pkg.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    updated_by: Mapped[uuid_pkg.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+
+
 class SoftDeleteMixin:
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)

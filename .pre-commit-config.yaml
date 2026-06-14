@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: black
         name: black
-        entry: black
+        entry: poetry run black
         language: system
         types: [python]
         pass_filenames: true
@@ -23,7 +23,7 @@ repos:
 
       - id: isort
         name: isort
-        entry: isort
+        entry: poetry run isort
         language: system
         types: [python]
         pass_filenames: true
@@ -32,7 +32,7 @@ repos:
 
       - id: ruff
         name: ruff
-        entry: ruff
+        entry: poetry run ruff
         language: system
         types: [python]
         pass_filenames: true
@@ -41,14 +41,14 @@ repos:
 
       - id: bandit
         name: bandit
-        entry: bandit
+        entry: poetry run bandit
         language: system
         types: [python]
         args: ["-c", "pyproject.toml"]
 
       - id: mypy
         name: mypy
-        entry: mypy
+        entry: poetry run mypy
         language: system
         types: [python]
         require_serial: true
