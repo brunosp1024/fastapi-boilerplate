@@ -22,7 +22,6 @@ dependencies = [
     "pydantic[email]",
     "python-jose[cryptography]",
     "bcrypt==4.3.0",
-    "passlib[bcrypt]",
     "python-multipart",
     "pydantic-settings",
     "python-dotenv",
