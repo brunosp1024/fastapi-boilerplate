@@ -35,7 +35,7 @@ async def http_client(post_app):
 
 @pytest.mark.asyncio
 async def test_create_post_route_success(post_app, http_client, monkeypatch):
-    fake_user = SimpleNamespace(id=uuid4(), role="user")
+    fake_user = SimpleNamespace(id=uuid4(), role="user", name="testuser")
 
     async def override_current_user():
         return fake_user
@@ -126,7 +126,7 @@ async def test_read_posts_empty(http_client, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_create_post_invalid_data(post_app, http_client, monkeypatch):
-    fake_user = SimpleNamespace(id=uuid4(), role="user")
+    fake_user = SimpleNamespace(id=uuid4(), role="user", name="testuser")
 
     async def override_current_user():
         return fake_user
@@ -224,7 +224,7 @@ async def test_read_post_cache_miss(http_client, monkeypatch):
 @pytest.mark.asyncio
 async def test_patch_post_cache_invalidation(post_app, http_client, monkeypatch):
     """patch_post endpoint runs and cache is invalidated."""
-    fake_user = SimpleNamespace(id=uuid4(), role="user")
+    fake_user = SimpleNamespace(id=uuid4(), role="user", name="testuser")
 
     async def override_current_user():
         return fake_user
@@ -253,7 +253,7 @@ async def test_patch_post_cache_invalidation(post_app, http_client, monkeypatch)
 @pytest.mark.asyncio
 async def test_erase_post_cache_invalidation(post_app, http_client, monkeypatch):
     """erase_post endpoint runs and cache is invalidated."""
-    fake_user = SimpleNamespace(id=uuid4(), role="user")
+    fake_user = SimpleNamespace(id=uuid4(), role="user", name="testuser")
 
     async def override_current_user():
         return fake_user
@@ -278,7 +278,7 @@ async def test_erase_post_cache_invalidation(post_app, http_client, monkeypatch)
 @pytest.mark.asyncio
 async def test_erase_db_post_cache_invalidation(post_app, http_client, monkeypatch):
     """erase_db_post endpoint runs and cache is invalidated."""
-    fake_user = SimpleNamespace(id=uuid4(), role="admin")
+    fake_user = SimpleNamespace(id=uuid4(), role="admin", name="testuser")
 
     async def override_current_user():
         return fake_user

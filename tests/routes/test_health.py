@@ -26,20 +26,20 @@ def test_health_check_healthy():
     mock_result.scalar_one_or_none.return_value = True
     db.execute.return_value = mock_result
     result = asyncio.run(health_check(db))
-    assert result["status"] == "healthy"
-    assert result["database"] == "healthy"
-    assert "timestamp" in result
-    assert result["version"] == "1.0.0"
+    assert result.status == "healthy"
+    assert result.database == "healthy"
+    assert result.timestamp is not None
+    assert result.version == "1.0.0"
 
 
 def test_health_check_unhealthy():
     db = AsyncMock(spec=AsyncSession)
     db.execute.side_effect = Exception("db error")
     result = asyncio.run(health_check(db))
-    assert result["status"] == "degraded"
-    assert result["database"].startswith("unhealthy:")
-    assert "timestamp" in result
-    assert result["version"] == "1.0.0"
+    assert result.status == "degraded"
+    assert result.database.startswith("unhealthy:")
+    assert result.timestamp is not None
+    assert result.version == "1.0.0"
 
 
 @pytest.mark.asyncio
