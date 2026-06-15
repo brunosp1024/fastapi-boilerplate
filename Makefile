@@ -27,10 +27,10 @@ clean:  ## Clean cache files
 	rm -rf .pytest_cache . coverage htmlcov
 
 docker-up:  ## Start Docker containers
-	docker-compose up -d
+	docker compose up -d
 
 docker-down:  ## Stop Docker containers
-	docker-compose down
+	docker compose down
 
 migrate:  ## Run database migrations
 	alembic upgrade head
