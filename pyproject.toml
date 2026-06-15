@@ -120,8 +120,7 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "jose.*",
-    "passlib.*",
+    "jose.*"
 ]
 ignore_missing_imports = true
 
