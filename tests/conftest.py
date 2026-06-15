@@ -1,4 +1,5 @@
 import os
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -8,11 +9,23 @@ from sqlalchemy.pool import StaticPool
 # Set test environment BEFORE any imports
 os.environ["APP_ENV"] = "test"
 
+import app.core.utils.cache as cache_module  # noqa: E402, I001
 import app.db.models  # noqa: F401, E402, I001
 from app.core.config import settings  # noqa: E402
 from app.db.base import async_get_db  # noqa: E402
 from app.db.models.base import Base  # noqa: E402, I001
 from app.main import app as fastapi_app  # noqa: E402
+
+# Patch Redis so the lifespan never tries to connect to a real server
+_mock_redis_client = AsyncMock()
+_mock_redis_client.aclose = AsyncMock()
+_mock_redis_client.get = AsyncMock(return_value=None)
+_mock_redis_client.set = AsyncMock()
+_mock_redis_client.expire = AsyncMock()
+_mock_redis_client.delete = AsyncMock()
+_mock_redis_client.scan = AsyncMock(return_value=(0, []))
+cache_module.client = _mock_redis_client
+cache_module.pool = MagicMock()
 
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 

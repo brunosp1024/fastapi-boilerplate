@@ -13,19 +13,33 @@ from app.services.post_service import PostService
 router = APIRouter(tags=["posts"])
 
 
+async def _get_current_username(
+    current_user: Annotated[Any, Depends(get_current_user)],
+) -> str:
+    return str(current_user.name)
+
+
 @router.post("/post", response_model=PostRead, status_code=201)
+@cache(
+    "{username}_posts",
+    resource_id_name="username",
+    pattern_to_invalidate_extra=["{username}_posts:*"],
+)
 async def create_post(
+    request: Request,
     post: PostCreate,
+    username: Annotated[str, Depends(_get_current_username)],
     current_user: Annotated[Any, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> PostRead:
-
     post_service = PostService(db)
     return await post_service.create_post(post, current_user.id)
 
 
 @router.get("/{username}/posts", response_model=list[PostRead])
+@cache(key_prefix="{username}_posts", resource_id_name="page")
 async def read_posts(
+    request: Request,
     username: str,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     page: int = 1,
@@ -74,7 +88,7 @@ async def patch_post(
 @cache(
     "{username}_post_cache",
     resource_id_name="id",
-    to_invalidate_extra={"{username}_posts": "{username}"},
+    pattern_to_invalidate_extra=["{username}_posts:*"],
 )
 async def erase_post(
     request: Request,
@@ -93,7 +107,7 @@ async def erase_post(
 @cache(
     "{username}_post_cache",
     resource_id_name="id",
-    to_invalidate_extra={"{username}_posts": "{username}"},
+    pattern_to_invalidate_extra=["{username}_posts:*"],
 )
 async def erase_db_post(
     request: Request,

@@ -1,5 +1,10 @@
 """Tests for exception class instantiation — covers missing __init__ bodies."""
 
+from app.core.exceptions.cache_exceptions import (
+    CacheIdentificationInferenceError,
+    InvalidRequestError,
+    MissingClientError,
+)
 from app.core.exceptions.http_exceptions import (
     BadRequestException,
     CustomException,
@@ -8,6 +13,25 @@ from app.core.exceptions.http_exceptions import (
     UnauthorizedException,
     UnprocessableEntityException,
 )
+
+# ── cache exceptions ──────────────────────────────────────────────────────────
+
+
+def test_cache_identification_inference_error_custom_message():
+    ex = CacheIdentificationInferenceError("custom id error")
+    assert ex.message == "custom id error"
+    assert str(ex) == "custom id error"
+
+
+def test_invalid_request_error_custom_message():
+    ex = InvalidRequestError("custom request error")
+    assert ex.message == "custom request error"
+
+
+def test_missing_client_error_custom_message():
+    ex = MissingClientError("custom client error")
+    assert ex.message == "custom client error"
+
 
 # ── http exceptions ───────────────────────────────────────────────────────────
 

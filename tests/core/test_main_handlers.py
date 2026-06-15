@@ -1,10 +1,13 @@
 """Tests for main.py exception handlers via HTTP — avoids importing decorated symbols."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.exc import SQLAlchemyError
 
+import app.core.utils.cache as cache_module
 from app.core.exceptions.http_exceptions import (
     BadRequestException,
     CustomException,
@@ -16,6 +19,7 @@ from app.core.exceptions.http_exceptions import (
     UnprocessableEntityException,
 )
 from app.main import app as main_app
+from app.main import lifespan
 
 
 def _route_app() -> FastAPI:
@@ -144,3 +148,35 @@ async def test_generic_exception_handler(handler_client):
     r = await handler_client.get("/generic")
     assert r.status_code == 500
     assert r.json()["detail"] == "Internal server error"
+
+
+@pytest.mark.asyncio
+async def test_lifespan_initializes_and_closes_redis():
+    """Lifespan creates and closes the Redis client outside test env."""
+    mock_redis = AsyncMock()
+    mock_redis.aclose = AsyncMock()
+    mock_pool = MagicMock()
+
+    saved_client = cache_module.client
+    saved_pool = cache_module.pool
+    try:
+        with (
+            patch("app.main.settings") as mock_settings,
+            patch("app.main.ConnectionPool", return_value=mock_pool),
+            patch("app.main.Redis", return_value=mock_redis),
+        ):
+            mock_settings.APP_ENV = "production"
+            mock_settings.REDIS_HOST = "localhost"
+            mock_settings.REDIS_PORT = 6379
+            mock_settings.REDIS_DB = 0
+
+            async with lifespan(main_app):
+                assert cache_module.client is mock_redis
+                assert cache_module.pool is mock_pool
+
+            mock_redis.aclose.assert_awaited_once()
+            assert cache_module.client is None
+            assert cache_module.pool is None
+    finally:
+        cache_module.client = saved_client
+        cache_module.pool = saved_pool
