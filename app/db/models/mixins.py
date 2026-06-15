@@ -1,5 +1,5 @@
 import uuid as uuid_pkg
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime
 from sqlalchemy.dialects.postgresql import UUID
@@ -13,9 +13,18 @@ class UUIDMixin:
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC)
+        DateTime, default=datetime.now, onupdate=datetime.now
+    )
+
+
+class AuditMixin:
+    created_by: Mapped[uuid_pkg.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    updated_by: Mapped[uuid_pkg.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
     )
 
 

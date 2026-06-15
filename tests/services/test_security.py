@@ -26,6 +26,10 @@ def test_hash_and_verify_password():
     assert not verify_password("wrong", hashed)
 
 
+def test_verify_password_invalid_hash_returns_false():
+    assert not verify_password("mysecret", "not-a-valid-bcrypt-hash")
+
+
 def test_create_and_verify_access_token():
     data = {"sub": "user@example.com", "role": "user"}
     token = create_access_token(data)

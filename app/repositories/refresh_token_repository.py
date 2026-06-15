@@ -5,11 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.refresh_token import RefreshToken
+from app.repositories.base_repository import BaseRepository
 
 
-class RefreshTokenRepository:
+class RefreshTokenRepository(BaseRepository):
     def __init__(self, db: AsyncSession):
-        self.db = db
+        super().__init__(db)
 
     async def create(
         self, user_id: uuid_pkg.UUID, token: str, expires_at: datetime
@@ -18,7 +19,7 @@ class RefreshTokenRepository:
             token=token, user_id=user_id, expires_at=expires_at
         )
         self.db.add(refresh_token)
-        await self.db.commit()
+        await self._safe_commit()
         await self.db.refresh(refresh_token)
         return refresh_token
 
@@ -33,5 +34,5 @@ class RefreshTokenRepository:
         if not refresh_token:
             return False
         refresh_token.revoked = True
-        await self.db.commit()
+        await self._safe_commit()
         return True

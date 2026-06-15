@@ -22,12 +22,11 @@ dependencies = [
     "pydantic[email]",
     "python-jose[cryptography]",
     "bcrypt==4.3.0",
-    "passlib[bcrypt]",
     "python-multipart",
     "pydantic-settings",
     "python-dotenv",
     "redis",
-    "asyncpg (>=0.31.0,<0.32.0)",
+    "asyncpg (>=0.31.0,<0.32.0)"
 ]
 
 # Dependências dev
@@ -121,8 +120,7 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "jose.*",
-    "passlib.*",
+    "jose.*"
 ]
 ignore_missing_imports = true
 

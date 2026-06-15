@@ -1,7 +1,6 @@
-from datetime import datetime
-from uuid import UUID
-
 from pydantic import BaseModel, EmailStr
+
+from app.schemas.mixins import BaseMixin
 
 
 class UserCreateDTO(BaseModel):
@@ -16,12 +15,9 @@ class UserUpdateDTO(BaseModel):
     password: str | None = None
 
 
-class UserResponse(BaseModel):
-    id: UUID
+class UserResponse(BaseMixin):
     name: str
     email: EmailStr
     role: str
-    created_at: datetime
-    updated_at: datetime
 
     model_config = {"from_attributes": True}

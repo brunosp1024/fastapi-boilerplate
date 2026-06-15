@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     DB_USER: str = "user"
     DB_PASSWORD: str = "password"
 
+    # Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440)

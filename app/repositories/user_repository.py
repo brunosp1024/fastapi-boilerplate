@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import hash_password
 from app.db.models.user import User
+from app.repositories.base_repository import BaseRepository
 from app.schemas.user_dto import UserCreateDTO, UserUpdateDTO
 
 
-class UserRepository:
+class UserRepository(BaseRepository):
     def __init__(self, db: AsyncSession):
-        self.db = db
+        super().__init__(db)
 
     async def create(self, user_data: UserCreateDTO) -> User:
         hashed_pw = hash_password(user_data.password)
@@ -24,7 +25,7 @@ class UserRepository:
             user.role = "admin"
 
         self.db.add(user)
-        await self.db.commit()
+        await self._safe_commit()
         await self.db.refresh(user)
         return user
 
@@ -35,6 +36,10 @@ class UserRepository:
     async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
+
+    async def get_by_name(self, name: str) -> User | None:
+        result = await self.db.execute(select(User).where(User.name == name))
+        return result.scalars().first()
 
     async def list(self) -> list[User]:
         result = await self.db.execute(select(User))
@@ -51,7 +56,7 @@ class UserRepository:
             setattr(user, key, value)
 
         user.updated_at = datetime.now(UTC)
-        await self.db.commit()
+        await self._safe_commit()
         await self.db.refresh(user)
         return user
 
@@ -60,5 +65,5 @@ class UserRepository:
         if not user:
             return False
         await self.db.delete(user)
-        await self.db.commit()
+        await self._safe_commit()
         return True
