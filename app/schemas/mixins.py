@@ -2,7 +2,7 @@ import uuid as uuid_pkg
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
 class HealthCheck(BaseModel):
@@ -55,4 +55,4 @@ class PersistentDeletion(BaseModel):
 
 
 class BaseMixin(UUIDSchema, TimestampSchema, PersistentDeletion):
-    pass
+    model_config = ConfigDict(from_attributes=True)

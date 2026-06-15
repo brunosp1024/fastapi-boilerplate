@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -77,7 +77,13 @@ async def refresh_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
-    if stored_token.expires_at < datetime.now(UTC):
+    now = (
+        datetime.now(stored_token.expires_at.tzinfo)
+        if stored_token.expires_at.tzinfo is not None
+        else datetime.now()
+    )
+
+    if stored_token.expires_at < now:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
         )

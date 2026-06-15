@@ -1,6 +1,6 @@
 import secrets
 import uuid as uuid_pkg
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,9 +20,7 @@ class AuthService:
     async def create_refresh_token(user_id: uuid_pkg.UUID, db: AsyncSession) -> str:
         """Create a new refresh token for a user."""
         token = secrets.token_hex(32)
-        expires_at = datetime.now(UTC) + timedelta(
-            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
-        )
+        expires_at = datetime.now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         refresh_token_repo = RefreshTokenRepository(db)
         await refresh_token_repo.create(user_id, token, expires_at)
         return token
